@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#123b63">
+<title>Staff Attendance</title>
+<style>
+:root{--navy:#123b63;--blue:#1e65a5;--bg:#f3f6fa;--line:#dce4ed;--text:#172536;--muted:#5e6d7c;--green:#19764a;--red:#b42318;--amber:#9a5b00}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:16px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+header{background:var(--navy);color:white;padding:20px 16px 16px}header h1{margin:0;font-size:23px}header p{margin:6px 0 0;color:#dbeafe;font-size:13px}
+main{max-width:1050px;margin:auto;padding:14px}.tabs{display:flex;gap:8px;overflow:auto;margin-bottom:12px}.tabs button{white-space:nowrap}
+button,.button{border:0;border-radius:10px;background:var(--blue);color:white;padding:11px 14px;font-weight:650;font-size:14px;cursor:pointer}
+button.secondary{background:#e7eef6;color:var(--navy)}button.danger{background:#fff0ee;color:var(--red)}button.green{background:var(--green)}button:disabled{opacity:.45}
+.panel{background:white;border:1px solid var(--line);border-radius:14px;padding:15px;margin-bottom:12px;box-shadow:0 2px 8px #102a4308}
+h2{font-size:18px;margin:0 0 12px}h3{font-size:15px;margin:14px 0 8px}.row{display:flex;gap:9px;flex-wrap:wrap;align-items:end}.field{display:flex;flex-direction:column;gap:5px;flex:1;min-width:135px}.field label{font-size:12px;color:var(--muted);font-weight:650}
+input,select,textarea{font:inherit;padding:10px;border:1px solid #c8d4e0;border-radius:9px;background:white;min-width:0;width:100%}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:9px}.stat{background:#f5f8fc;border:1px solid var(--line);border-radius:11px;padding:12px}.stat b{display:block;font-size:22px;margin-top:4px}.stat span{font-size:12px;color:var(--muted)}
+.staffcard{border:1px solid var(--line);border-radius:12px;padding:13px;margin:9px 0}.stafftop{display:flex;justify-content:space-between;gap:8px;align-items:center}.stafftop strong{font-size:16px}.sub{font-size:12px;color:var(--muted);margin-top:4px}.actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}.pill{display:inline-block;padding:4px 8px;border-radius:99px;font-size:11px;background:#edf2f7;color:#31465a}.pill.late{background:#fff0d9;color:#8b4c00}
+.tablewrap{overflow:auto}table{border-collapse:collapse;width:100%;font-size:13px;min-width:650px}th,td{padding:9px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}th{background:#f4f7fb;color:#40556a}
+.hidden{display:none!important}.notice{font-size:12px;line-height:1.5;color:var(--muted)}.warning{background:#fff8e7;border:1px solid #f1d69a;padding:11px;border-radius:10px;font-size:13px;line-height:1.45}.success{color:var(--green)}.error{color:var(--red)}footer{text-align:center;padding:16px;color:var(--muted);font-size:12px}
+@media(min-width:700px){.twocol{display:grid;grid-template-columns:1fr 1fr;gap:12px}}
+@media print{body{background:white;font-size:11px}header,.tabs,.noprint,footer{display:none!important}main{padding:0;max-width:none}.panel{border:0;box-shadow:none;padding:0;margin:0 0 12px}.tablewrap{overflow:visible}table{min-width:0;font-size:10px}th,td{padding:5px;white-space:normal}.printtitle{display:block!important}}
+</style>
+</head>
+<body>
+<header><h1>Staff Attendance</h1><p>Daily IN/OUT · Working hours · Monthly reports · Backup & restore</p></header>
+<main>
+<div class="tabs noprint">
+<button data-tab="daily">Daily Attendance</button><button class="secondary" data-tab="staff">Staff List</button><button class="secondary" data-tab="reports">Reports & Print</button><button class="secondary" data-tab="settings">Settings & Backup</button>
+</div>
+<section id="daily" class="tab">
+<div class="panel noprint">
+<div class="row"><div class="field"><label>Attendance date</label><input id="workDate" type="date"></div><div class="field"><label>Find staff</label><input id="searchStaff" placeholder="Type a name"></div></div>
+<p class="notice">Tap IN when the staff member arrives and OUT when they leave. The app records the current time on this device. Corrected or back-entered times are marked in the history.</p>
+</div>
+<div id="dailyStats" class="grid"></div><div id="dailyList"></div>
+</section>
+<section id="staff" class="tab hidden">
+<div class="panel noprint"><h2>Add staff member</h2><div class="row"><div class="field"><label>Staff name</label><input id="newName" placeholder="Enter name"></div><div class="field"><label>Usual start time</label><input id="newStart" type="time" value="09:00"></div><div class="field"><label>Usual finish time (optional)</label><input id="newEnd" type="time" value="18:00"></div><button id="addStaff">Add Staff</button></div></div>
+<div class="panel"><h2>Staff list</h2><div id="staffList"></div></div>
+</section>
+<section id="reports" class="tab hidden">
+<div class="panel noprint"><h2>Reports & printing</h2><div class="row"><div class="field"><label>Month</label><input id="reportMonth" type="text" inputmode="numeric" placeholder="YYYY-MM" aria-label="Report month (YYYY-MM)"></div><div class="field"><label>Report type</label><select id="reportType"><option value="all">All staff monthly summary</option><option value="detail">All staff daily detail</option><option value="individual">Individual staff monthly detail</option></select></div><div class="field" id="individualField"><label>Staff member</label><select id="reportStaff"></select></div><button id="refreshReport">Show Report</button><button id="printReport" class="green">Print / Save PDF</button></div>
+<p class="notice">On iPhone, choose Print in the iOS share/print screen. You can also save the report as a PDF where the print dialog offers that option.</p></div>
+<div id="reportOutput" class="panel"><p class="notice">Choose a month and tap Show Report.</p></div>
+</section>
+<section id="settings" class="tab hidden">
+<div class="panel"><h2>Attendance settings</h2><div class="row">
+<div class="field"><label>Default reporting time</label><input id="settingStart" type="time" value="09:00"></div>
+<div class="field"><label>Grace period (minutes)</label><input id="settingGrace" type="number" min="0" max="240" value="15"></div>
+<div class="field"><label>Proposed late fee (₹)</label><input id="settingFee" type="number" min="0" step="1" value="20"></div>
+<div class="field"><label>Default break (minutes)</label><input id="settingBreak" type="number" min="0" max="600" value="30"></div>
+<button id="saveSettings">Save Settings</button></div>
+<p class="notice">Late arrival is calculated only when IN time is more than the reporting time plus the grace period. The fee is a tracking field, not an automatic wage deduction. Check applicable employment and wage rules before applying any deduction.</p></div>
+<div class="panel"><h2>Backup & restore</h2><div class="row"><button id="exportBackup">Download JSON Backup</button><div class="field"><label>Restore from a JSON backup</label><input id="importFile" type="file" accept=".json,application/json"></div><button id="importBackup" class="secondary">Restore Backup</button></div><hr style="border:0;border-top:1px solid var(--line);margin:16px 0"><div class="row"><div class="field"><label>Import attendance from Apple Numbers CSV</label><input id="csvImportFile" type="file" accept=".csv,text/csv"></div><button id="importCsv" class="secondary">Import CSV Attendance</button></div><p class="notice">CSV import merges attendance statuses into this app; it does not replace existing records. Dates and employee names are matched from the spreadsheet. Missing IN/OUT times remain blank. Export a JSON backup before importing.</p><p class="notice">Keep backup files somewhere safe, such as your Mac. Restoring a JSON backup replaces the current data in this app. Export a backup first and only restore a file you trust.</p><div id="backupMsg" class="notice"></div></div>
+<div class="panel"><h2>Data protection</h2><div class="warning">Records are stored in this browser on this device. They do not automatically sync to your other iPhone, iPad, or Mac. Export JSON backups regularly. Clearing Safari website data or removing the browser's stored data may erase records.</div></div>
+</section>
+<footer>Staff Attendance · Local device storage · Make regular backups</footer>
+</main>
+<script>
+const KEY='staffAttendanceData_v1';
+const initialNames=['Prema','Teja','Mounika','Sujitha','Gayatri','Usha','Nikkie','Rajesh','Salomi','Bharati'];
+const today=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
+const monthNow=()=>today().slice(0,7);
+const uid=()=>Math.random().toString(36).slice(2,10)+Date.now().toString(36);
+let data;
+function fresh(){return {version:1,staff:initialNames.map(name=>({id:uid(),name,start:'09:00',end:'18:00',active:true,createdAt:new Date().toISOString()})),entries:{},settings:{start:'09:00',grace:15,fee:20,breakMin:30}}}
+function load(){try{const x=JSON.parse(localStorage.getItem(KEY));if(x&&x.staff&&x.entries&&x.settings)return x}catch(e){}return fresh()}
+data=load();function save(){localStorage.setItem(KEY,JSON.stringify(data))}
+const $=id=>document.getElementById(id);
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function fmtTime(v){if(!v)return '—';let [h,m]=v.split(':').map(Number);let ap=h>=12?'PM':'AM';h=h%12||12;return `${h}:${String(m).padStart(2,'0')} ${ap}`}
+function minTime(v){if(!v)return null;let [h,m]=v.split(':').map(Number);return h*60+m}
+function duration(e){if(!e.inTime||!e.outTime)return null;let a=minTime(e.inTime),b=minTime(e.outTime);if(b<a)b+=1440;return Math.max(0,b-a-(Number(e.breakMin)||0))}
+function durFmt(n){if(n==null)return '—';return `${Math.floor(n/60)}h ${String(n%60).padStart(2,'0')}m`}
+function entryKey(staffId,date){return `${date}|${staffId}`}
+function getEntry(id,date){return data.entries[entryKey(id,date)]||{staffId:id,date,status:'',inTime:'',outTime:'',breakMin:data.settings.breakMin,lateFee:0,lateMinutes:0,history:[]}}
+function putEntry(e){data.entries[entryKey(e.staffId,e.date)]=e;save()}
+function lateInfo(staff,e){if(!e.inTime)return {mins:0,fee:0};let actual=minTime(e.inTime),start=minTime(staff.start||data.settings.start)||0;let mins=Math.max(0,actual-start-Number(data.settings.grace||0));return {mins,fee:mins>0?Number(data.settings.fee||0):0}}
+function audit(e,field,oldVal,newVal,note){e.history=e.history||[];e.history.push({at:new Date().toISOString(),field,oldVal:oldVal??'',newVal:newVal??'',note:note||'Updated'});e.lastChangedAt=new Date().toISOString()}
+function setTab(name){document.querySelectorAll('.tab').forEach(el=>el.classList.toggle('hidden',el.id!==name));document.querySelectorAll('[data-tab]').forEach(b=>{b.classList.toggle('secondary',b.dataset.tab!==name)});if(name==='daily')renderDaily();if(name==='staff')renderStaff();if(name==='reports'){fillReportStaff();renderReport()}if(name==='settings')fillSettings()}
+document.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>setTab(b.dataset.tab)));
+function renderDaily(){let date=$('workDate').value||today(),q=$('searchStaff').value.toLowerCase();let active=data.staff.filter(s=>s.active&&s.name.toLowerCase().includes(q));let counts={present:0,half:0,absent:0,late:0};active.forEach(s=>{let e=getEntry(s.id,date);if(e.status==='Present')counts.present++;if(e.status==='Half Day')counts.half++;if(e.status==='Absent')counts.absent++;if(lateInfo(s,e).fee)counts.late++});$('dailyStats').innerHTML=`<div class="stat"><span>Active staff</span><b>${active.length}</b></div><div class="stat"><span>Present</span><b>${counts.present}</b></div><div class="stat"><span>Half day</span><b>${counts.half}</b></div><div class="stat"><span>Absent</span><b>${counts.absent}</b></div><div class="stat"><span>Late arrivals</span><b>${counts.late}</b></div>`;
+$('dailyList').innerHTML=active.map(s=>{let e=getEntry(s.id,date),l=lateInfo(s,e),d=duration(e);return `<div class="staffcard"><div class="stafftop"><div><strong>${esc(s.name)}</strong><div class="sub">${esc(date)} · ${e.status?esc(e.status):'Not marked'} ${l.fee?`<span class="pill late">Late ${l.mins} min · ₹${l.fee}</span>`:''}</div></div><span class="pill">${durFmt(d)}</span></div><div class="sub">IN: <b>${fmtTime(e.inTime)}</b> &nbsp; OUT: <b>${fmtTime(e.outTime)}</b> &nbsp; Break: ${Number(e.breakMin)||0} min</div><div class="actions noprint"><button class="green" onclick="clockAction('${s.id}','in')">IN</button><button onclick="clockAction('${s.id}','out')">OUT</button><button class="secondary" onclick="editEntry('${s.id}')">Edit times</button><select style="width:auto;max-width:150px" aria-label="Attendance status" onchange="setStatus('${s.id}',this.value)"><option value="" ${!e.status?'selected':''}>Set status</option>${['Present','Half Day','Absent','Weekly Off','Paid Leave'].map(st=>`<option ${e.status===st?'selected':''}>${st}</option>`).join('')}</select><button class="secondary" onclick="showHistory('${s.id}')">History</button></div></div>`}).join('')||'<div class="panel">No active staff match this search.</div>'}
+window.clockAction=(id,kind)=>{let date=$('workDate').value||today(),e=getEntry(id,date),staff=data.staff.find(s=>s.id===id);let val=new Date();let tm=`${String(val.getHours()).padStart(2,'0')}:${String(val.getMinutes()).padStart(2,'0')}`;let field=kind==='in'?'inTime':'outTime';if(e[field]&&!confirm(`${kind.toUpperCase()} already recorded at ${fmtTime(e[field])}. Replace it with ${fmtTime(tm)}?`))return;let old=e[field];e[field]=tm;audit(e,field,old,tm,`Recorded using ${kind.toUpperCase()} button`);if(!e.status)e.status='Present';if(kind==='in'){let l=lateInfo(staff,e);e.lateMinutes=l.mins;e.lateFee=l.fee}putEntry(e);renderDaily()};
+window.setStatus=(id,status)=>{let date=$('workDate').value||today(),e=getEntry(id,date),old=e.status;e.status=status;if(status==='Absent'||status==='Weekly Off'||status==='Paid Leave'){/* retain any times already entered */}audit(e,'status',old,status,'Attendance status changed');putEntry(e);renderDaily()};
+window.editEntry=(id)=>{let date=$('workDate').value||today(),e=getEntry(id,date),staff=data.staff.find(s=>s.id===id);let inn=prompt(`IN time for ${staff.name} (24-hour HH:MM; blank if none)`,e.inTime||'');if(inn===null)return;inn=inn.trim();if(inn&&!/^([01]\d|2[0-3]):[0-5]\d$/.test(inn)){alert('Enter time as HH:MM, for example 09:05.');return}let out=prompt(`OUT time for ${staff.name} (24-hour HH:MM; blank if none)`,e.outTime||'');if(out===null)return;out=out.trim();if(out&&!/^([01]\d|2[0-3]):[0-5]\d$/.test(out)){alert('Enter time as HH:MM, for example 18:00.');return}let br=prompt('Break minutes',String(e.breakMin??data.settings.breakMin));if(br===null)return;if(!/^\d+$/.test(br)||Number(br)>600){alert('Enter break as whole minutes (0–600).');return}if(inn!==e.inTime){audit(e,'inTime',e.inTime,inn,'Manual correction');e.inTime=inn}if(out!==e.outTime){audit(e,'outTime',e.outTime,out,'Manual correction');e.outTime=out}if(Number(br)!==Number(e.breakMin)){audit(e,'breakMin',e.breakMin,Number(br),'Break corrected');e.breakMin=Number(br)}if(inn&&!e.status)e.status='Present';let l=lateInfo(staff,e);e.lateMinutes=l.mins;e.lateFee=l.fee;putEntry(e);renderDaily()};
+window.showHistory=(id)=>{let date=$('workDate').value||today(),e=getEntry(id,date),staff=data.staff.find(s=>s.id===id);let lines=(e.history||[]).map(h=>`${new Date(h.at).toLocaleString()} — ${h.field}: "${h.oldVal}" → "${h.newVal}" (${h.note})`);alert(`${staff.name} · ${date}\\n\\n`+(lines.join('\\n')||'No corrections or changes recorded.'))};
+function renderStaff(){$('staffList').innerHTML=data.staff.map(s=>`<div class="staffcard"><div class="stafftop"><div><strong>${esc(s.name)}</strong><div class="sub">${s.active?'Active':'Inactive'} · Start ${fmtTime(s.start)} · Finish ${fmtTime(s.end)}</div></div><span class="pill">${s.active?'Current staff':'Historical only'}</span></div><div class="actions noprint"><button class="secondary" onclick="editStaff('${s.id}')">Edit</button><button class="${s.active?'danger':'green'}" onclick="toggleStaff('${s.id}')">${s.active?'Mark Inactive':'Reactivate'}</button><button class="danger" onclick="deleteStaffPermanently('${s.id}')">Delete Permanently</button></div></div>`).join('')}
+$('addStaff').onclick=()=>{let name=$('newName').value.trim();if(!name){alert('Enter a staff name.');return}if(data.staff.some(s=>s.name.toLowerCase()===name.toLowerCase())){alert('A staff member with this name already exists.');return}data.staff.push({id:uid(),name,start:$('newStart').value||data.settings.start,end:$('newEnd').value||'',active:true,createdAt:new Date().toISOString()});save();$('newName').value='';renderStaff();fillReportStaff()};
+window.editStaff=id=>{let s=data.staff.find(x=>x.id===id);let name=prompt('Staff name',s.name);if(name===null)return;name=name.trim();if(!name)return;let start=prompt('Usual reporting time (24-hour HH:MM)',s.start||data.settings.start);if(start===null)return;if(start&&!/^([01]\d|2[0-3]):[0-5]\d$/.test(start)){alert('Invalid time.');return}let end=prompt('Usual finish time (24-hour HH:MM; blank if not set)',s.end||'');if(end===null)return;if(end&&!/^([01]\d|2[0-3]):[0-5]\d$/.test(end)){alert('Invalid time.');return}s.name=name;s.start=start||data.settings.start;s.end=end;save();renderStaff();fillReportStaff();renderDaily()};
+window.toggleStaff=id=>{let s=data.staff.find(x=>x.id===id);if(s.active){if(!confirm(`Mark ${s.name} inactive? Their old records will be kept.`))return;s.active=false}else s.active=true;save();renderStaff();renderDaily();fillReportStaff()};
+window.deleteStaffPermanently=id=>{
+  const staff=data.staff.find(s=>s.id===id);
+  if(!staff)return;
+  const related=Object.entries(data.entries).filter(([key,e])=>e && e.staffId===id);
+  const warning=`PERMANENTLY DELETE ${staff.name}?\\n\\nThis will remove this staff member and ${related.length} associated attendance record(s), including historical records. This cannot be undone from the app.\\n\\nPlease ensure you have a JSON backup. Continue?`;
+  if(!confirm(warning))return;
+  const verify=prompt(`To confirm permanent deletion, type exactly: ${staff.name}`);
+  if(verify!==staff.name)return alert('Deletion cancelled. The name did not match.');
+  data.staff=data.staff.filter(s=>s.id!==id);
+  for(const [key,e] of Object.entries(data.entries)){
+    if(e && e.staffId===id)delete data.entries[key];
+  }
+  save();
+  renderStaff();renderDaily();fillReportStaff();renderReport();
+  alert(`${staff.name} and ${related.length} associated attendance record(s) were permanently deleted.`);
+};
+function fillSettings(){$('settingStart').value=data.settings.start;$('settingGrace').value=data.settings.grace;$('settingFee').value=data.settings.fee;$('settingBreak').value=data.settings.breakMin}
+$('saveSettings').onclick=()=>{data.settings.start=$('settingStart').value||'09:00';data.settings.grace=Math.max(0,Number($('settingGrace').value)||0);data.settings.fee=Math.max(0,Number($('settingFee').value)||0);data.settings.breakMin=Math.max(0,Number($('settingBreak').value)||0);save();alert('Settings saved.');renderDaily()};
+function fillReportStaff(){let old=$('reportStaff').value;$('reportStaff').innerHTML=data.staff.map(s=>`<option value="${s.id}">${esc(s.name)}${s.active?'':' (inactive)'}</option>`).join('');if(data.staff.some(s=>s.id===old))$('reportStaff').value=old}
+function normalizeMonthValue(v){
+  const s=String(v||'').trim();
+  let m=s.match(/^(\d{4})-(\d{1,2})(?:-\d{1,2})?$/);
+  if(m){
+    const year=Number(m[1]), month=Number(m[2]);
+    if(month>=1&&month<=12)return `${year}-${String(month).padStart(2,'0')}`;
+  }
+  m=s.match(/^(\d{1,2})[-/](\d{4})$/);
+  if(m){
+    const month=Number(m[1]), year=Number(m[2]);
+    if(month>=1&&month<=12)return `${year}-${String(month).padStart(2,'0')}`;
+  }
+  return '';
+}
+function monthDates(m){let [y,mo]=m.split('-').map(Number),days=new Date(y,mo,0).getDate();return Array.from({length:days},(_,i)=>`${m}-${String(i+1).padStart(2,'0')}`)}
+function allEntriesFor(s,m){return monthDates(m).map(date=>({s,e:getEntry(s.id,date)}))}
+function summary(s,m){let rows=allEntriesFor(s,m),present=0,half=0,absent=0,mins=0,lateCount=0,fees=0,lateMins=0;for(let {e} of rows){if(e.status==='Present')present++;if(e.status==='Half Day')half++;if(e.status==='Absent')absent++;let d=duration(e);if(d!=null)mins+=d;let l=lateInfo(s,e);if(l.fee){lateCount++;fees+=l.fee;lateMins+=l.mins}}return {present,half,absent,mins,lateCount,fees,lateMins,rows}}
+function renderReport(){
+  let normalized=normalizeMonthValue($('reportMonth').value);
+  if(!normalized){
+    $('reportOutput').innerHTML='<p class="error">Please enter a valid month as YYYY-MM, for example 2026-09.</p>';
+    return;
+  }
+  $('reportMonth').value=normalized;
+  if(!$('reportType').value)$('reportType').value='all';
+  $('individualField').classList.toggle('hidden',$('reportType').value!=='individual');
+  let m=normalized,type=$('reportType').value;
+  let title=`Staff Attendance Report — ${new Date(m+'-01T12:00:00').toLocaleDateString('en-IN',{month:'long',year:'numeric'})}`;let staff=type==='individual'?data.staff.filter(s=>s.id===$('reportStaff').value):data.staff;let html=`<div class="printtitle"><h2>${esc(title)}</h2><p>Generated ${new Date().toLocaleString()}</p></div>`;
+if(type==='all'){html+=`<h2>All Staff Monthly Summary</h2><div class="tablewrap"><table><thead><tr><th>Staff</th><th>Present</th><th>Half day</th><th>Absent</th><th>Total hours</th><th>Late count</th><th>Late minutes</th><th>Late fee*</th></tr></thead><tbody>`;let totals={p:0,h:0,a:0,m:0,l:0,fee:0};staff.forEach(s=>{let x=summary(s,m);totals.p+=x.present;totals.h+=x.half;totals.a+=x.absent;totals.m+=x.mins;totals.l+=x.lateCount;totals.fee+=x.fees;html+=`<tr><td>${esc(s.name)}${s.active?'':' (inactive)'}</td><td>${x.present}</td><td>${x.half}</td><td>${x.absent}</td><td>${durFmt(x.mins)}</td><td>${x.lateCount}</td><td>${x.lateMins}</td><td>₹${x.fees}</td></tr>`});html+=`</tbody><tfoot><tr><th>TOTAL</th><th>${totals.p}</th><th>${totals.h}</th><th>${totals.a}</th><th>${durFmt(totals.m)}</th><th>${totals.l}</th><th>—</th><th>₹${totals.fee}</th></tr></tfoot></table></div><p class="notice">*Late-fee tracking is based on configured start time and grace period. Verify applicable employment rules before applying wage deductions.</p>`}
+else if(type==='detail'||type==='individual'){html+=`<h2>${type==='individual'?'Individual':'All Staff'} Daily Detail</h2><div class="tablewrap"><table><thead><tr><th>Date</th><th>Staff</th><th>IN</th><th>OUT</th><th>Break</th><th>Hours</th><th>Status</th><th>Late min</th><th>Late fee*</th><th>Corrections</th></tr></thead><tbody>`;for(let date of monthDates(m)){for(let s of staff){let e=getEntry(s.id,date);if(type==='detail'&&!e.status&&!e.inTime&&!e.outTime)continue;let l=lateInfo(s,e);html+=`<tr><td>${date}</td><td>${esc(s.name)}</td><td>${fmtTime(e.inTime)}</td><td>${fmtTime(e.outTime)}</td><td>${Number(e.breakMin)||0}m</td><td>${durFmt(duration(e))}</td><td>${esc(e.status||'—')}</td><td>${l.mins||0}</td><td>₹${l.fee}</td><td>${(e.history||[]).length}</td></tr>`}}html+=`</tbody></table></div><p class="notice">*Late-fee tracking only. This report records the times stored in this app; manually entered times are not independent proof of when someone arrived.</p>`}
+$('reportOutput').innerHTML=html}
+$('refreshReport').onclick=()=>renderReport();$('reportMonth').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();renderReport()}};$('reportType').onchange=renderReport;$('reportStaff').onchange=()=>{if($('reportType').value==='individual')renderReport()};
+$('printReport').onclick=()=>{renderReport();window.print()};
+$('exportBackup').onclick=()=>{save();let blob=new Blob([JSON.stringify({...data,exportedAt:new Date().toISOString()},null,2)],{type:'application/json'});let a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`staff-attendance-backup-${today()}.json`;a.click();URL.revokeObjectURL(a.href);$('backupMsg').textContent='Backup export requested. Check Files or Downloads for the JSON file.'};
+
+function parseCSV(text){
+  const rows=[]; let row=[], cell='', quoted=false;
+  text=text.replace(/^\uFEFF/,'');
+  for(let i=0;i<text.length;i++){
+    const c=text[i];
+    if(c==='"'){
+      if(quoted && text[i+1]==='"'){cell+='"';i++} else quoted=!quoted;
+    } else if(c===',' && !quoted){row.push(cell.trim());cell=''}
+    else if((c==='\n'||c==='\r')&&!quoted){
+      if(c==='\r'&&text[i+1]==='\n')i++;
+      row.push(cell.trim());cell='';
+      if(row.some(v=>v!==''))rows.push(row);
+      row=[];
+    } else cell+=c;
+  }
+  if(cell!==''||row.length){row.push(cell.trim());rows.push(row)}
+  return rows;
+}
+function parseSheetDate(v){
+  if(!v)return null;
+  let m=String(v).trim().match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{2}|\d{4})$/);
+  if(!m)return null;
+  let day=Number(m[1]), month=Number(m[2]), year=Number(m[3]);
+  if(year<100)year+=2000;
+  if(month<1||month>12||day<1||day>31)return null;
+  const d=new Date(year,month-1,day);
+  if(d.getFullYear()!==year||d.getMonth()!==month-1||d.getDate()!==day)return null;
+  return `${year}-${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+}
+$('importCsv').onclick=()=>{
+  const f=$('csvImportFile').files[0];
+  if(!f){alert('Choose an Apple Numbers CSV file first.');return}
+  if(!confirm('Import attendance statuses from this CSV? Existing entries will be merged/updated for dates and staff present in the file. A JSON backup is recommended first.'))return;
+  const reader=new FileReader();
+  reader.onload=()=>{
+    try{
+      const rows=parseCSV(String(reader.result||''));
+      if(rows.length<2)throw new Error('The CSV has no attendance rows.');
+      const headers=rows[0].map(v=>v.trim());
+      const dateCol=headers.findIndex(h=>/^date$/i.test(h));
+      if(dateCol<0)throw new Error('Could not find a Date column.');
+      const ignore=/^(s\.?\s*no\.?|date|month|\d{1,2}[-/]\d{1,2}[-/]\d{2,4})$/i;
+      const staffCols=headers.map((h,i)=>({name:h.trim(),i})).filter(x=>x.name&&!ignore.test(x.name));
+      let imported=0, skipped=0, created=0;
+      const byName=new Map(data.staff.map(s=>[s.name.trim().toLowerCase(),s]));
+      for(const col of staffCols){
+        const key=col.name.toLowerCase();
+        if(!byName.has(key)){
+          const s={id:uid(),name:col.name,start:data.settings.start,end:'',active:false,createdAt:new Date().toISOString(),historicalOnly:true};
+          data.staff.push(s);byName.set(key,s);created++;
+        }
+      }
+      for(let r=1;r<rows.length;r++){
+        const cells=rows[r]; const date=parseSheetDate(cells[dateCol]||'');
+        if(!date){skipped++;continue}
+        for(const col of staffCols){
+          const raw=(cells[col.i]||'').trim().toLowerCase();
+          if(!raw){continue}
+          let status='';
+          if(raw==='p'||raw==='present')status='Present';
+          else if(raw==='a'||raw==='absent')status='Absent';
+          else if(raw==='1/2'||raw==='1\\2'||raw==='½'||raw==='half'||raw==='half day')status='Half Day';
+          else if(raw==='paid'||raw==='paid leave'||raw==='cl')status='Paid Leave';
+          else if(raw==='wo'||raw==='weekly off')status='Weekly Off';
+          else {skipped++;continue}
+          const s=byName.get(col.name.toLowerCase());
+          const e=getEntry(s.id,date);
+          if(e.inTime||e.outTime){
+            // Keep previously recorded times, only update the imported status.
+            audit(e,'status',e.status,status,'Imported from Numbers CSV');
+          } else {
+            audit(e,'status',e.status,status,'Imported from Numbers CSV');
+          }
+          e.status=status;
+          putEntry(e); imported++;
+        }
+      }
+      save();renderDaily();renderStaff();fillReportStaff();renderReport();
+      $('backupMsg').textContent=`Import complete: ${imported} attendance statuses imported; ${created} historical staff member(s) added inactive; ${skipped} invalid/unrecognized cells or rows skipped. IN/OUT times were not invented.`;
+      alert(`Import complete.\\nAttendance statuses imported: ${imported}\\nHistorical staff added inactive: ${created}\\nSkipped cells/rows: ${skipped}\\n\\nPlease review monthly reports and download a fresh JSON backup.`);
+    }catch(e){alert('Could not import this CSV: '+e.message)}
+  };
+  reader.readAsText(f);
+};
+
+$('importBackup').onclick=()=>{let f=$('importFile').files[0];if(!f){alert('Choose a JSON backup file first.');return}if(!confirm('Restore replaces all current staff and attendance data in this app. Export a backup first. Continue?'))return;let r=new FileReader();r.onload=()=>{try{let x=JSON.parse(r.result);if(!Array.isArray(x.staff)||!x.entries||!x.settings)throw new Error('This does not look like a Staff Attendance backup.');data={version:1,staff:x.staff,entries:x.entries,settings:x.settings};save();renderDaily();renderStaff();fillReportStaff();fillSettings();renderReport();$('backupMsg').textContent='Backup restored. Please verify staff names and reports.';alert('Restore completed. Please verify the records.')}catch(e){alert('Could not restore this file: '+e.message)}};r.readAsText(f)};
+$('workDate').value=today();$('reportMonth').value=monthNow();$('workDate').onchange=renderDaily;$('searchStaff').oninput=renderDaily;
+fillSettings();fillReportStaff();renderDaily();renderStaff();renderReport();
+</script>
+</body></html>
