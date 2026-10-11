@@ -74,7 +74,7 @@ const $=id=>document.getElementById(id);
 function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function fmtTime(v){if(!v)return '—';let [h,m]=v.split(':').map(Number);let ap=h>=12?'PM':'AM';h=h%12||12;return `${h}:${String(m).padStart(2,'0')} ${ap}`}
 function minTime(v){if(!v)return null;let [h,m]=v.split(':').map(Number);return h*60+m}
-function duration(e){if(!e.inTime||!e.outTime)return null;let a=minTime(e.inTime),b=minTime(e.outTime);if(b<a)b+=1440;return (b-a)>(Number(e.breakMin)||0)?b-a-(Number(e.breakMin)||0):b-a
+function duration(e){if(!e.inTime||!e.outTime)return null;let a=minTime(e.inTime),b=minTime(e.outTime);if(b<a)b+=1440;return Math.max(0,(b-a)-(Number(e.breakMin)||0))}
                     }function durFmt(n){if(n==null)return '—';return `${Math.floor(n/60)}h ${String(n%60).padStart(2,'0')}m`}
 function entryKey(staffId,date){return `${date}|${staffId}`}
 function getEntry(id,date){return data.entries[entryKey(id,date)]||{staffId:id,date,status:'',inTime:'',outTime:'',breakMin:data.settings.breakMin,lateFee:0,lateMinutes:0,history:[]}}
