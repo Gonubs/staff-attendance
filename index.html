@@ -235,7 +235,6 @@ $('importCsv').onclick=()=>{
 $('importBackup').onclick=()=>{let f=$('importFile').files[0];if(!f){alert('Choose a JSON backup file first.');return}if(!confirm('Restore replaces all current staff and attendance data in this app. Export a backup first. Continue?'))return;let r=new FileReader();r.onload=()=>{try{let x=JSON.parse(r.result);if(!Array.isArray(x.staff)||!x.entries||!x.settings)throw new Error('This does not look like a Staff Attendance backup.');data={version:1,staff:x.staff,entries:x.entries,settings:x.settings};save();renderDaily();renderStaff();fillReportStaff();fillSettings();renderReport();$('backupMsg').textContent='Backup restored. Please verify staff names and reports.';alert('Restore completed. Please verify the records.')}catch(e){alert('Could not restore this file: '+e.message)}};r.readAsText(f)};
 $('workDate').value=today();$('reportMonth').value=monthNow();$('workDate').onchange=renderDaily;$('searchStaff').oninput=renderDaily;
 fillSettings();fillReportStaff();renderDaily();renderStaff();renderReport();
-  <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./service-worker.js')
